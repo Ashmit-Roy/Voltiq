@@ -1,0 +1,11 @@
+{
+  "module_name": "universal-data-ingestion",
+  "version": "1.0.0",
+  "description": "Universal telemetry ingestion and normalization engine for IoT and time-series metrics.",
+  "author": "PS-07 Team",
+  "type": "tradable_asset",
+  "category": "Data Ingestion",
+  "input_formats": ["json", "csv", "dict", "stream"],
+  "output_format": "standardized_telemetry_schema_v1",
+  "dependencies": ["pydantic>=2.0.0", "pandas>=2.0.0"]
+}
