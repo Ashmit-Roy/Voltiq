@@ -1,0 +1,11 @@
+{
+  "module_name": "forecasting-prediction-engine",
+  "version": "1.0.0",
+  "description": "Modular time-series forecasting and trend prediction engine.",
+  "author": "PS-07 Team",
+  "type": "tradable_asset",
+  "category": "Machine Learning & Forecasting",
+  "input_schema": "historical_timeseries_v1",
+  "output_schema": "forecast_projection_v1",
+  "dependencies": ["numpy>=1.26.0", "pydantic>=2.0.0"]
+}
