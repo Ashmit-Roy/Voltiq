@@ -1,0 +1,11 @@
+{
+  "module_name": "anomaly-detection-engine",
+  "version": "1.0.0",
+  "description": "Plug-and-play anomaly detection engine for time-series and numerical streams.",
+  "author": "PS-07 Team",
+  "type": "tradable_asset",
+  "category": "Analytics & AI",
+  "input_schema": "generic_timeseries_v1",
+  "output_schema": "anomaly_report_v1",
+  "dependencies": ["numpy>=1.26.0", "pydantic>=2.0.0"]
+}
