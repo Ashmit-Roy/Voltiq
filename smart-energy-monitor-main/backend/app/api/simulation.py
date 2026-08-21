@@ -3,11 +3,21 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import uuid
 from app.database.session import get_db
-from app.models.energy import Room, EnergyReading, AnomalyEvent, Alert, Recommendation
+from app.models.energy import Room, Device, EnergyReading, AnomalyEvent, Alert, Recommendation
+from app.services.data_seeder import seed_database
 from app.integrations.tradable_adapters import normalizer_adapter, anomaly_detector_adapter
 from app.integrations.acquired_adapters import notification_service_adapter, recommendation_engine_adapter
 
 router = APIRouter(prefix="/simulation", tags=["IoT Simulation"])
+
+@router.post("/reset")
+def reset_simulation_state(db: Session = Depends(get_db)):
+    """Resets the database to a clean, realistic hostel block baseline state."""
+    seed_database(db, force_reset=True)
+    return {
+        "status": "success",
+        "message": "Telemetry database successfully reset to clean baseline (Block B Hostel)."
+    }
 
 @router.post("/trigger-spike")
 def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_db)):
@@ -24,7 +34,7 @@ def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_
     }
     normalized = normalizer_adapter.normalize(raw_payload, source_type="simulated_iot")
 
-    # 2. Persist Reading
+    # 2. Persist Reading to Database
     reading = EnergyReading(
         timestamp=now,
         room_id=normalized.entity_id,
@@ -44,6 +54,7 @@ def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_
     recomm_obj = None
 
     if anomaly_eval.is_anomaly:
+        # Record Anomaly Event
         anomaly_event = AnomalyEvent(
             timestamp=now,
             room_id=room_id,
@@ -57,20 +68,33 @@ def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_
         )
         db.add(anomaly_event)
 
-        alert_id = f"ALT-{str(uuid.uuid4())[:6].upper()}"
-        alert_obj = Alert(
-            id=alert_id,
-            room_id=room_id,
-            title=f"Critical Power Surge in {room_id}",
-            message=f"Live AC spike detected: {anomaly_eval.actual_value} kWh vs expected max {anomaly_eval.expected_max} kWh (+{anomaly_eval.deviation_percent}%).",
-            severity=anomaly_eval.severity,
-            actual_value=anomaly_eval.actual_value,
-            expected_range=f"{anomaly_eval.expected_min} - {anomaly_eval.expected_max} kWh",
-            created_at=now,
-            status="ACTIVE"
-        )
-        db.add(alert_obj)
+        # Check if an ACTIVE alert for this room already exists
+        existing_alert = db.query(Alert).filter(
+            Alert.room_id == room_id,
+            Alert.status == "ACTIVE"
+        ).first()
 
+        if existing_alert:
+            existing_alert.actual_value = anomaly_eval.actual_value
+            existing_alert.created_at = now
+            existing_alert.message = f"Live AC surge sustained: {anomaly_eval.actual_value} kWh vs expected max {anomaly_eval.expected_max} kWh (+{anomaly_eval.deviation_percent}% deviation)."
+            alert_obj = existing_alert
+        else:
+            alert_id = f"ALT-{str(uuid.uuid4())[:6].upper()}"
+            alert_obj = Alert(
+                id=alert_id,
+                room_id=room_id,
+                title=f"Critical Power Surge in {room_id}",
+                message=f"Live AC spike detected: {anomaly_eval.actual_value} kWh vs expected max {anomaly_eval.expected_max} kWh (+{anomaly_eval.deviation_percent}% deviation).",
+                severity=anomaly_eval.severity,
+                actual_value=anomaly_eval.actual_value,
+                expected_range=f"{anomaly_eval.expected_min} - {anomaly_eval.expected_max} kWh",
+                created_at=now,
+                status="ACTIVE"
+            )
+            db.add(alert_obj)
+
+        # Dispatch Notification via Acquired Service Adapter
         notification_result = notification_service_adapter.dispatch_alert(
             title=alert_obj.title,
             message=alert_obj.message,
@@ -78,20 +102,30 @@ def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_
             entity_id=room_id
         )
 
+        # Recommendation Generation
         rec_data = recommendation_engine_adapter.generate_savings_recommendation(room_id, anomaly_eval.actual_value, True)
-        recomm_id = f"REC-{str(uuid.uuid4())[:6].upper()}"
-        recomm_obj = Recommendation(
-            id=recomm_id,
-            room_id=room_id,
-            title=rec_data["title"],
-            description=rec_data["description"],
-            suggested_action=rec_data["suggested_action"],
-            potential_savings=rec_data["potential_savings"],
-            severity=rec_data["severity"],
-            created_at=now
-        )
-        db.add(recomm_obj)
+        existing_rec = db.query(Recommendation).filter(Recommendation.room_id == room_id).first()
+        if existing_rec:
+            existing_rec.title = rec_data["title"]
+            existing_rec.description = rec_data["description"]
+            existing_rec.suggested_action = rec_data["suggested_action"]
+            existing_rec.created_at = now
+            recomm_obj = existing_rec
+        else:
+            recomm_id = f"REC-{str(uuid.uuid4())[:6].upper()}"
+            recomm_obj = Recommendation(
+                id=recomm_id,
+                room_id=room_id,
+                title=rec_data["title"],
+                description=rec_data["description"],
+                suggested_action=rec_data["suggested_action"],
+                potential_savings=rec_data["potential_savings"],
+                severity=rec_data["severity"],
+                created_at=now
+            )
+            db.add(recomm_obj)
 
+        # Update Room status
         room = db.query(Room).filter(Room.id == room_id).first()
         if room:
             room.status = "abnormal"
@@ -100,7 +134,7 @@ def trigger_spike_scenario(room_id: str = "ROOM-203", db: Session = Depends(get_
 
     return {
         "status": "success",
-        "scenario": f"Live AC spike triggered for {room_id}",
+        "scenario": f"Live AC spike triggered for {room_id} (+{anomaly_eval.deviation_percent}% surge)",
         "normalized_reading": normalized.dict() if hasattr(normalized, "dict") else normalized.__dict__,
         "anomaly_result": anomaly_eval.dict() if hasattr(anomaly_eval, "dict") else anomaly_eval.__dict__,
         "notification_dispatched": notification_result,

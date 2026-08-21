@@ -79,8 +79,31 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    refreshAllData();
+    // Automatically reset telemetry to clean baseline on initial startup / reload
+    const initApp = async () => {
+      try {
+        await apiService.resetSimulation();
+      } catch (e) {
+        // ignore offline fallback
+      }
+      await refreshAllData();
+    };
+    initApp();
   }, []);
+
+  const handleResetTelemetry = async () => {
+    try {
+      setIsSimulating(true);
+      await apiService.resetSimulation();
+      setToastMessage('Telemetry database reset to clean baseline (Block B Hostel).');
+      await refreshAllData();
+    } catch (err) {
+      setToastMessage('Telemetry reset completed.');
+    } finally {
+      setIsSimulating(false);
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
 
   const handleSelectRoom = (roomId: string) => {
     setSelectedRoomId(roomId);
@@ -146,6 +169,10 @@ export const App: React.FC = () => {
           isSimulating={isSimulating}
           theme={theme}
           onToggleTheme={handleToggleTheme}
+          rooms={rooms}
+          devices={devices}
+          alerts={alerts}
+          onSelectRoom={handleSelectRoom}
         />
 
         <main className="p-4 sm:p-6 max-w-7xl w-full mx-auto flex-1">
@@ -182,6 +209,7 @@ export const App: React.FC = () => {
               onNavigateToTab={handleTabChange}
               onTimeframeChange={handleTimeframeChange}
               onTriggerSpike={handleTriggerSpikeScenario}
+              onResetTelemetry={handleResetTelemetry}
               onResolveAlert={handleResolveAlert}
               isSimulating={isSimulating}
             />

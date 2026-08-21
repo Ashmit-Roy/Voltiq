@@ -41,12 +41,13 @@ interface DashboardPageProps {
   onNavigateToTab: (tab: any) => void;
   onTimeframeChange: (timeframe: 'daily' | 'weekly' | 'monthly') => void;
   onTriggerSpike: () => void;
+  onResetTelemetry?: () => void;
   onResolveAlert: (alertId: string) => void;
   isSimulating?: boolean;
 }
 
 const DEVICE_COLORS = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f43f5e'];
-const BUDGET_CEILING = 15000; // Monthly budget limit in INR
+const BUDGET_CEILING = 200000; // Monthly budget target limit in INR for Block B Hostel
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   summary,
@@ -58,6 +59,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateToTab,
   onTimeframeChange,
   onTriggerSpike,
+  onResetTelemetry,
   onResolveAlert,
   isSimulating = false,
 }) => {
@@ -77,8 +79,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   ];
 
   const activeAlerts = alerts.filter((a) => a.status === 'ACTIVE');
-  const totalKwh = summary?.total_consumption_kwh || 850.0;
-  const projectedBill = summary?.projected_bill || 12450.0;
+  const totalKwh = summary?.total_consumption_kwh || 3800.0;
+  const projectedBill = summary?.projected_bill || 128400.0;
   const budgetUsagePercent = Math.min(100, Math.round((projectedBill / BUDGET_CEILING) * 100));
   const carbonFootprintKg = (totalKwh * 0.85).toFixed(1);
 
@@ -107,10 +109,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+          {onResetTelemetry && (
+            <button
+              onClick={onResetTelemetry}
+              disabled={isSimulating}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-all border border-slate-700 active:scale-95"
+              title="Reset telemetry database back to clean starting baseline"
+            >
+              Reset Baseline
+            </button>
+          )}
           <button
             onClick={onTriggerSpike}
             disabled={isSimulating}
-            className="w-full md:w-auto px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:brightness-110 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950/50"
+            className="w-full md:w-auto px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:brightness-110 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950/50 active:scale-95"
           >
             <Sparkles className="w-4 h-4 fill-slate-950" />
             <span>{isSimulating ? 'Processing Live Spike...' : 'Trigger Live AC Spike'}</span>
@@ -145,7 +157,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <StatCard
           title="Projected Bill"
           value={`₹${projectedBill.toLocaleString('en-IN')}`}
-          subtext={`${budgetUsagePercent}% of ₹15,000 budget`}
+          subtext={`${budgetUsagePercent}% of ₹2,00,000 target`}
           icon={CalendarCheck}
           accentColor="purple"
         />
@@ -167,7 +179,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div>
             <h4 className="text-xs font-semibold text-slate-200">Monthly Electricity Budget Forecast</h4>
             <p className="text-[11px] text-slate-400">
-              Target Limit: <span className="font-semibold text-slate-200">₹15,000</span> | Projected: <span className="font-semibold text-purple-400">₹{projectedBill.toLocaleString('en-IN')}</span>
+              Target Limit: <span className="font-semibold text-slate-200">₹2,00,000</span> | Projected: <span className="font-semibold text-purple-400">₹{projectedBill.toLocaleString('en-IN')}</span>
             </p>
           </div>
         </div>

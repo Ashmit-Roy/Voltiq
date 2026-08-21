@@ -285,7 +285,17 @@ export const apiService = {
     );
   },
 
-  // 11. Raw Ingestion Endpoint Test
+  // 11. Reset Simulation / Telemetry to Clean Baseline
+  async resetSimulation(): Promise<{ status: string; message: string }> {
+    const mock = { status: 'success', message: 'Telemetry database successfully reset to clean baseline.' };
+    return fetchWithFallback<{ status: string; message: string }>(
+      `${API_BASE_URL}/simulation/reset`,
+      mock,
+      { method: 'POST' }
+    );
+  },
+
+  // 12. Raw Ingestion Endpoint Test
   async ingestReading(payload: any): Promise<any> {
     const mock = { status: 'success', total_ingested: 1, anomalies_flagged: 1 };
     return fetchWithFallback<any>(
