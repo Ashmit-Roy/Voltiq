@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EnergyReading",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "room_id": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "energy_kwh": {
+      "type": "number",
+      "minimum": 0
+    },
+    "power_kw": {
+      "type": "number",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string",
+      "enum": ["mock", "iot_esp32", "csv", "api"]
+    }
+  },
+  "required": ["timestamp", "room_id", "energy_kwh"]
+}
