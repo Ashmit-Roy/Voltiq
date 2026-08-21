@@ -10,11 +10,26 @@ interface AlertsPageProps {
 }
 
 export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, onResolveAlert }) => {
-  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'RESOLVED'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'RESOLVED'>('ALL');
 
-  const filteredAlerts = alerts.filter((a) => {
+  // Deduplicate locally — guard against backend sending duplicate records
+  const uniqueAlerts = React.useMemo(() => {
+    const seen = new Set<string>();
+    return alerts.filter((a) => {
+      const id = (a as any).alert_id || a.id;
+      const key = id
+        ? `${id}::${a.room_id}::${a.title}`
+        : `${a.room_id || a.room_name}::${a.title}::${a.actual_value}::${a.timestamp}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [alerts]);
+
+  const filteredAlerts = uniqueAlerts.filter((a) => {
     if (filter === 'ALL') return true;
-    return a.status === filter;
+    if (filter === 'RESOLVED') return a.status === 'RESOLVED';
+    return a.status === 'ACTIVE' && a.severity === filter;
   });
 
   return (
@@ -23,23 +38,38 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
       <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800">
         <div className="flex items-center space-x-2">
           <ShieldAlert className="w-5 h-5 text-rose-400" />
-          <h3 className="font-semibold text-slate-100 text-sm">Abnormal Usage Events & Alerts</h3>
+          <div>
+            <h3 className="font-semibold text-slate-100 text-sm">Abnormal Energy Usage Alerts</h3>
+            <p className="text-[11px] text-slate-400">Section 16 — Filter events by severity or resolution status</p>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          {(['ALL', 'ACTIVE', 'RESOLVED'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                filter === tab
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {tab} ({alerts.filter((a) => (tab === 'ALL' ? true : a.status === tab)).length})
-            </button>
-          ))}
+        <div className="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+          {(['ALL', 'HIGH', 'MEDIUM', 'LOW', 'RESOLVED'] as const).map((tab) => {
+            const count = uniqueAlerts.filter((a) => {
+              if (tab === 'ALL') return true;
+              if (tab === 'RESOLVED') return a.status === 'RESOLVED';
+              return a.status === 'ACTIVE' && a.severity === tab;
+            }).length;
+
+            return (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+                  filter === tab
+                    ? tab === 'HIGH'
+                      ? 'bg-rose-500 text-white shadow-sm'
+                      : tab === 'MEDIUM'
+                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      : 'bg-emerald-500 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {tab} ({count})
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -72,3 +102,4 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
     </div>
   );
 };
+

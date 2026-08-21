@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cpu, Send, CheckCircle2, Code } from 'lucide-react';
+import { Cpu, Send, CheckCircle2, Code, Zap, ArrowRight, Play } from 'lucide-react';
 import { apiService } from '../services/api';
 
 export const AnalyticsPage: React.FC = () => {
@@ -19,6 +19,35 @@ export const AnalyticsPage: React.FC = () => {
 
   const [ingestionResult, setIngestionResult] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const presets = {
+    normal: {
+      timestamp: new Date().toISOString(),
+      location: 'ROOM-101',
+      device: 'AC-ECO-01',
+      value: 12.4,
+      unit: 'kWh',
+    },
+    surge: {
+      timestamp: new Date().toISOString(),
+      location: 'ROOM-203',
+      device: 'AC-HEAVY-02',
+      value: 38.5,
+      unit: 'kWh',
+    },
+    multisensor: {
+      timestamp: new Date().toISOString(),
+      location: 'ROOM-302',
+      device: 'DESKTOP-RIG-CLUSTER',
+      value: 26.2,
+      unit: 'kWh',
+      source: 'mqtt_sensor_node_04',
+    },
+  };
+
+  const handleApplyPreset = (key: keyof typeof presets) => {
+    setCustomPayload(JSON.stringify(presets[key], null, 2));
+  };
 
   const handleRunIngestionTest = async () => {
     try {
@@ -76,6 +105,32 @@ export const AnalyticsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Visual Pipeline Data Flow Diagram */}
+      <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">End-to-End Data Pipeline Architecture</h4>
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
+          <div className="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-lg border border-emerald-500/30">
+            <Zap className="w-4 h-4 text-emerald-400" />
+            <span className="font-mono text-slate-200">IoT Telemetry</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-600 hidden sm:block" />
+          <div className="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-lg border border-cyan-500/30">
+            <Code className="w-4 h-4 text-cyan-400" />
+            <span className="font-mono text-slate-200">Ingestion Normalizer</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-600 hidden sm:block" />
+          <div className="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-lg border border-rose-500/30">
+            <Cpu className="w-4 h-4 text-rose-400" />
+            <span className="font-mono text-slate-200">Anomaly & Forecast Engine</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-600 hidden sm:block" />
+          <div className="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-lg border border-purple-500/30">
+            <CheckCircle2 className="w-4 h-4 text-purple-400" />
+            <span className="font-mono text-slate-200">FastAPI & React UI</span>
+          </div>
+        </div>
+      </div>
+
       {/* Architecture & Pipeline Status */}
       <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
         <div>
@@ -133,14 +188,42 @@ export const AnalyticsPage: React.FC = () => {
 
       {/* Live Data Ingestion Tester */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <div>
-          <h3 className="text-base font-semibold text-slate-100 flex items-center space-x-2">
-            <Code className="w-4 h-4 text-cyan-400" />
-            <span>Interactive Data Ingestion Tester</span>
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            Send custom JSON telemetry payloads directly to <span className="font-mono text-emerald-400">POST /api/v1/energy/readings</span> to test the Universal Ingestion Normalizer.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-slate-100 flex items-center space-x-2">
+              <Code className="w-4 h-4 text-cyan-400" />
+              <span>Interactive Data Ingestion Tester</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Send custom JSON telemetry payloads directly to <span className="font-mono text-emerald-400">POST /api/v1/energy/readings</span> to test the Universal Ingestion Normalizer.
+            </p>
+          </div>
+
+          {/* 1-Click Payload Preset Buttons */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-slate-400 font-medium">Presets:</span>
+            <button
+              onClick={() => handleApplyPreset('normal')}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-900 text-emerald-400 hover:bg-slate-800 border border-slate-800 transition-colors flex items-center space-x-1"
+            >
+              <Play className="w-3 h-3" />
+              <span>Normal AC</span>
+            </button>
+            <button
+              onClick={() => handleApplyPreset('surge')}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-900 text-rose-400 hover:bg-slate-800 border border-slate-800 transition-colors flex items-center space-x-1"
+            >
+              <Play className="w-3 h-3" />
+              <span>AC Surge</span>
+            </button>
+            <button
+              onClick={() => handleApplyPreset('multisensor')}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-900 text-cyan-400 hover:bg-slate-800 border border-slate-800 transition-colors flex items-center space-x-1"
+            >
+              <Play className="w-3 h-3" />
+              <span>Multi-Sensor</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -173,3 +256,4 @@ export const AnalyticsPage: React.FC = () => {
     </div>
   );
 };
+

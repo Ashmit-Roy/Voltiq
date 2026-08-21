@@ -5,6 +5,8 @@ import {
   Sparkles,
   UserCheck,
   RefreshCw,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { NavTab } from './Sidebar';
 
@@ -14,6 +16,8 @@ interface HeaderProps {
   activeAlertCount: number;
   onTriggerSpikeScenario: () => void;
   isSimulating?: boolean;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +26,8 @@ export const Header: React.FC<HeaderProps> = ({
   activeAlertCount,
   onTriggerSpikeScenario,
   isSimulating = false,
+  theme = 'dark',
+  onToggleTheme,
 }) => {
   const titles: Record<NavTab, { title: string; desc: string }> = {
     dashboard: {
@@ -53,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   const current = titles[activeTab];
 
   return (
-    <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 sticky top-0 z-30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 sticky top-0 z-30 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
       {/* Page Title & Subtitle */}
       <div>
         <h2 className="text-xl font-bold font-heading text-slate-50 flex items-center space-x-2">
@@ -103,6 +109,19 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
+        {/* Dark / Light Mode Toggle Button (directly to the right of alert symbol) */}
+        <button
+          onClick={onToggleTheme}
+          className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-colors flex items-center justify-center"
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-indigo-500" />
+          )}
+        </button>
+
         {/* Admin Profile Chip */}
         <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
           <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 font-bold text-xs">
@@ -117,3 +136,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

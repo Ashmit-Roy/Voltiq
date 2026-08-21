@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Layers,
   ChevronRight,
+  Target,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -22,6 +23,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  ReferenceLine,
 } from 'recharts';
 import { StatCard } from '../components/ui/StatCard';
 import { StatusBadge } from '../components/ui/StatusBadge';
@@ -44,6 +46,7 @@ interface DashboardPageProps {
 }
 
 const DEVICE_COLORS = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f43f5e'];
+const BUDGET_CEILING = 15000; // Monthly budget limit in INR
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   summary,
@@ -74,6 +77,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   ];
 
   const activeAlerts = alerts.filter((a) => a.status === 'ACTIVE');
+  const totalKwh = summary?.total_consumption_kwh || 850.0;
+  const projectedBill = summary?.projected_bill || 12450.0;
+  const budgetUsagePercent = Math.min(100, Math.round((projectedBill / BUDGET_CEILING) * 100));
+  const carbonFootprintKg = (totalKwh * 0.85).toFixed(1);
 
   return (
     <div className="space-y-6 pb-12">
@@ -115,7 +122,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Energy Usage"
-          value={`${summary?.total_consumption_kwh || 850.0} kWh`}
+          value={`${totalKwh} kWh`}
+          subtext={`🌱 ~${carbonFootprintKg} kg CO₂ offset target`}
           trend={{ value: 8.4, isPositiveGood: false, label: 'vs last week' }}
           icon={Zap}
           accentColor="emerald"
@@ -136,8 +144,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         />
         <StatCard
           title="Projected Bill"
-          value={`₹${(summary?.projected_bill || 12450).toLocaleString('en-IN')}`}
-          subtext="Based on current trend"
+          value={`₹${projectedBill.toLocaleString('en-IN')}`}
+          subtext={`${budgetUsagePercent}% of ₹15,000 budget`}
           icon={CalendarCheck}
           accentColor="purple"
         />
@@ -150,6 +158,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         />
       </div>
 
+      {/* 2b. Projected Bill Budget Progress Bar Banner */}
+      <div className="glass-card rounded-xl p-4 border border-purple-500/20 glow-border-purple flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <Target className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-semibold text-slate-200">Monthly Electricity Budget Forecast</h4>
+            <p className="text-[11px] text-slate-400">
+              Target Limit: <span className="font-semibold text-slate-200">₹15,000</span> | Projected: <span className="font-semibold text-purple-400">₹{projectedBill.toLocaleString('en-IN')}</span>
+            </p>
+          </div>
+        </div>
+        <div className="w-full sm:w-64 space-y-1">
+          <div className="flex justify-between text-[11px] font-medium">
+            <span className="text-slate-400">Budget Usage</span>
+            <span className={budgetUsagePercent > 90 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+              {budgetUsagePercent}%
+            </span>
+          </div>
+          <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                budgetUsagePercent > 90
+                  ? 'bg-gradient-to-r from-amber-400 to-rose-500'
+                  : 'bg-gradient-to-r from-emerald-400 to-cyan-400'
+              }`}
+              style={{ width: `${budgetUsagePercent}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
       {/* 3. Charts Section: Energy Consumption Trend & Device Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Consumption Trend Chart */}
@@ -160,7 +201,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 <span>Energy Consumption Trend</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Electricity demand pattern over selected timeframe</p>
+              <p className="text-xs text-slate-400 mt-0.5">Electricity demand pattern over selected timeframe with baseline reference</p>
             </div>
 
             {/* Timeframe selector */}
@@ -203,6 +244,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   }}
                   formatter={(val: any) => [`${val} kWh`, 'Consumption']}
                 />
+                <ReferenceLine
+                  y={50}
+                  stroke="#f43f5e"
+                  strokeDasharray="4 4"
+                  label={{ value: 'Target Baseline (50 kWh)', fill: '#f43f5e', fontSize: 10, position: 'insideTopRight' }}
+                />
                 <Area
                   type="monotone"
                   dataKey="consumption_kwh"
@@ -226,7 +273,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </h3>
               <button
                 onClick={() => onNavigateToTab('devices')}
-                className="text-xs text-emerald-400 hover:underline flex items-center space-x-0.5"
+                className="text-xs text-emerald-400 hover:underline flex items-center space-x-0.5 font-medium"
               >
                 <span>View Breakdown</span>
                 <ChevronRight className="w-3 h-3" />
@@ -253,11 +300,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#0f172a',
-                      borderColor: '#334155',
+                      borderColor: '#38bdf8',
                       borderRadius: '0.75rem',
                       fontSize: '12px',
-                      color: '#fff',
+                      color: '#ffffff',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
                     }}
+                    itemStyle={{ color: '#38bdf8', fontWeight: 700 }}
+                    labelStyle={{ color: '#ffffff', fontWeight: 700 }}
                     formatter={(value: any, name: any) => [`${value} kWh`, name]}
                   />
                 </PieChart>
@@ -404,3 +454,4 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     </div>
   );
 };
+

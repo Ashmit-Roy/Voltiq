@@ -12,9 +12,35 @@ import { apiService } from './services/api';
 import { DashboardSummary, DashboardTrendsResponse, RoomItem, DeviceItem, AlertItem, RecommendationItem } from './types';
 import { Sparkles } from 'lucide-react';
 
+const deduplicateAlerts = (list: AlertItem[]): AlertItem[] => {
+  const seen = new Set<string>();
+  return list.filter((item) => {
+    // Compound key: prefer id, but also guard on title+room+value to catch API duplicates with same id
+    const id = (item as any).alert_id || item.id;
+    const key = id
+      ? `${id}::${item.room_id}::${item.title}`
+      : `${item.room_id || item.room_name}::${item.title}::${item.actual_value}::${item.timestamp}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const deduplicateRecommendations = (list: RecommendationItem[]): RecommendationItem[] => {
+  const seen = new Set<string>();
+  return list.filter((item) => {
+    // Compound key: id + title + room to catch all duplicate patterns from backend
+    const key = `${item.id || ''}::${item.title}::${item.room_id || item.room_name || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [trends, setTrends] = useState<DashboardTrendsResponse | null>(null);
@@ -25,6 +51,10 @@ export const App: React.FC = () => {
 
   const [isSimulating, setIsSimulating] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const refreshAllData = async (tf: 'daily' | 'weekly' | 'monthly' = 'daily') => {
     try {
@@ -41,8 +71,8 @@ export const App: React.FC = () => {
       setTrends(trRes);
       setRooms(roomsRes);
       setDevices(devRes);
-      setAlerts(alertRes);
-      setRecommendations(recRes);
+      setAlerts(deduplicateAlerts(alertRes));
+      setRecommendations(deduplicateRecommendations(recRes));
     } catch (err) {
       console.error('Error refreshing energy telemetry:', err);
     }
@@ -97,7 +127,7 @@ export const App: React.FC = () => {
   const activeAlertCount = alerts.filter((a) => a.status === 'ACTIVE').length;
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className={`flex min-h-screen ${theme === 'light' ? 'light-mode bg-slate-100 text-slate-900' : 'dark bg-slate-950 text-slate-100'} transition-colors`}>
       {/* Persistent Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -114,6 +144,8 @@ export const App: React.FC = () => {
           activeAlertCount={activeAlertCount}
           onTriggerSpikeScenario={handleTriggerSpikeScenario}
           isSimulating={isSimulating}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
 
         <main className="p-4 sm:p-6 max-w-7xl w-full mx-auto flex-1">
@@ -171,3 +203,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
