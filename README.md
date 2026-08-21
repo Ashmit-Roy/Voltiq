@@ -1,7 +1,7 @@
 # ⚡ Voltiq — HACQUIRE 2026
 
 > **Problem Statement: PS-07 — Smart Energy Monitor for Hostels and Homes**  
-> Built by Team Voltiq · FED, KIIT University
+> Built by Team KWIKWIT · FED, KIIT University
 
 ---
 
