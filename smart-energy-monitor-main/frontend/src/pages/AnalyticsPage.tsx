@@ -86,23 +86,6 @@ export const AnalyticsPage: React.FC = () => {
     },
   ];
 
-  const acquiredModules = [
-    {
-      id: 'notification-service',
-      name: 'Notification / Alert Service',
-      type: 'Acquired Feature #1 (BUY)',
-      desc: 'Dispatches urgent external/in-app alert notifications when critical energy anomalies occur.',
-      status: 'Integrated Adapter Connected',
-    },
-    {
-      id: 'recommendation-engine',
-      name: 'AI Saving Recommendation Engine',
-      type: 'Acquired Feature #2 (BUY)',
-      desc: 'Generates room-specific actionable suggestions to curb energy wastage.',
-      status: 'Integrated Adapter Connected',
-    },
-  ];
-
   return (
     <div className="space-y-6 pb-12">
       {/* Visual Pipeline Data Flow Diagram */}
@@ -139,7 +122,7 @@ export const AnalyticsPage: React.FC = () => {
             <span>HACQUIRE Multi-Repository Architecture & Pipeline Status</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            Voltiq integrates 3 standalone tradable repositories (SELL) and 2 acquired external adapters (BUY).
+            Voltiq integrates 3 standalone tradable repositories (SELL) powering the core energy monitor pipeline.
           </p>
         </div>
 
@@ -158,27 +141,6 @@ export const AnalyticsPage: React.FC = () => {
                 <p className="text-xs text-slate-400 mt-1">{mod.desc}</p>
               </div>
               <div className="mt-3 text-[11px] font-mono text-emerald-400 pt-2 border-t border-slate-800">
-                ● {mod.status}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Acquired Modules */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {acquiredModules.map((mod) => (
-            <div key={mod.id} className="bg-slate-950/80 rounded-xl p-4 border border-purple-500/30 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                    {mod.type}
-                  </span>
-                  <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                </div>
-                <h4 className="font-semibold text-slate-100 text-sm">{mod.name}</h4>
-                <p className="text-xs text-slate-400 mt-1">{mod.desc}</p>
-              </div>
-              <div className="mt-3 text-[11px] font-mono text-purple-400 pt-2 border-t border-slate-800">
                 ● {mod.status}
               </div>
             </div>

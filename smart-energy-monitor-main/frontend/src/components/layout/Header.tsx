@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Dark / Light Mode Toggle Button (directly to the right of alert symbol) */}
+        {/* Dark / Light Mode Toggle Button */}
         <button
           onClick={onToggleTheme}
           className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-colors flex items-center justify-center"
