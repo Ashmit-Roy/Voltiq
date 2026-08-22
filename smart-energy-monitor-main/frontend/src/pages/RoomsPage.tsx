@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowUpRight, ArrowDownRight, Zap, LayoutGrid, ListFilter, Building } from 'lucide-react';
+import { Search, LayoutGrid, ListFilter, Building, DoorOpen } from 'lucide-react';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { RoomItem } from '../types';
 
@@ -42,17 +42,17 @@ export const RoomsPage: React.FC<RoomsPageProps> = ({ rooms, onSelectRoom }) => 
   return (
     <div className="space-y-6 pb-12">
       {/* Search & Filter Header Bar */}
-      <div className="glass-panel rounded-2xl p-4 space-y-4 border border-slate-800">
+      <div className="glass-panel rounded-2xl p-4 sm:p-5 space-y-4 border border-slate-800">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Search Field */}
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search room name, floor or ID (e.g. Room 203)..."
-              className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 pl-9 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-emerald-500/50"
+              placeholder="Search room name or ID (e.g. Room 203)..."
+              className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-amber-500/50"
             />
           </div>
 
@@ -77,7 +77,7 @@ export const RoomsPage: React.FC<RoomsPageProps> = ({ rooms, onSelectRoom }) => 
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg text-xs transition-colors ${
-                  viewMode === 'grid' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+                  viewMode === 'grid' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Grid View"
               >
@@ -86,7 +86,7 @@ export const RoomsPage: React.FC<RoomsPageProps> = ({ rooms, onSelectRoom }) => 
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg text-xs transition-colors ${
-                  viewMode === 'table' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+                  viewMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Table View"
               >
@@ -98,116 +98,114 @@ export const RoomsPage: React.FC<RoomsPageProps> = ({ rooms, onSelectRoom }) => 
 
         {/* Status Filter Pills */}
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 pt-2 border-t border-slate-800/80">
-          <span className="text-xs text-slate-400 font-medium mr-2">Status:</span>
           {(['all', 'abnormal', 'high', 'normal', 'efficient'] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap ${
                 statusFilter === filter
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 bg-slate-950'
               }`}
             >
-              {filter}
+              {filter === 'all' ? 'All Units' : filter} (
+              {
+                rooms.filter((r) =>
+                  filter === 'all' ? true : r.status.toLowerCase() === filter.toLowerCase()
+                ).length
+              }
+              )
             </button>
           ))}
         </div>
       </div>
 
-      {/* Grid or Table Display */}
-      {filteredRooms.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 text-center border border-slate-800 space-y-3">
-          <Search className="w-8 h-8 text-slate-500 mx-auto" />
-          <h3 className="text-sm font-semibold text-slate-300">No rooms found matching your filter parameters</h3>
-          <p className="text-xs text-slate-500">Try clearing search terms or status filters.</p>
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredRooms.map((room) => (
-            <div
-              key={room.id}
-              onClick={() => onSelectRoom(room.id)}
-              className="glass-card rounded-xl p-5 border border-slate-800 hover:border-emerald-500/40 cursor-pointer group transition-all"
-            >
-              <div className="flex items-start justify-between">
+      {/* Grid View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRooms.map((room) => {
+            const isAbnormal = room.status.toLowerCase() === 'abnormal';
+            return (
+              <div
+                key={room.id}
+                onClick={() => onSelectRoom(room.id)}
+                className={`glass-card rounded-2xl p-5 border cursor-pointer flex flex-col justify-between ${
+                  isAbnormal ? 'border-rose-500/40 bg-slate-900/90' : 'border-slate-800'
+                }`}
+              >
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{room.floor}</span>
-                  <h3 className="text-lg font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">{room.name}</h3>
-                </div>
-                <StatusBadge status={room.status} size="sm" />
-              </div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-200">
+                        <DoorOpen className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-100 text-sm font-heading">{room.name}</h4>
+                        <span className="text-xs text-slate-400">{room.floor} • Hostel Block B</span>
+                      </div>
+                    </div>
+                    <StatusBadge status={room.status} size="sm" />
+                  </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3 pt-3 border-t border-slate-800/60">
-                <div>
-                  <span className="text-[11px] text-slate-400 block">Consumption</span>
-                  <span className="text-base font-bold font-mono text-slate-100 mt-0.5 block">{room.consumption_kwh} kWh</span>
+                  <div className="grid grid-cols-2 gap-3 mt-5 bg-slate-950/80 p-3 rounded-xl border border-slate-800 font-mono text-xs">
+                    <div>
+                      <span className="text-slate-400 font-sans text-[11px] block">Consumption</span>
+                      <span className="text-sm font-bold text-slate-100 mt-0.5 block">{room.consumption_kwh} kWh</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-sans text-[11px] block">Accrued Cost</span>
+                      <span className="text-sm font-bold text-emerald-400 mt-0.5 block">₹{room.cost}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[11px] text-slate-400 block">Est. Cost</span>
-                  <span className="text-base font-bold text-emerald-400 mt-0.5 block">₹{room.cost}</span>
-                </div>
-              </div>
 
-              <div className="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-800/40 text-slate-400">
-                <span className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-cyan-400" />
-                  <span>Load: {room.current_load_kw || (room.consumption_kwh * 0.04).toFixed(1)} kW</span>
-                </span>
-                <span className={`font-semibold flex items-center ${room.trend_percent > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {room.trend_percent > 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-                  {Math.abs(room.trend_percent)}%
-                </span>
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                  <span>Current Load: <span className="text-slate-200 font-mono">{room.current_load_kw || 1.2} kW</span></span>
+                  <span className="text-amber-400 font-semibold group-hover:underline">Inspect Room →</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-                <th className="pb-3 px-3">Room</th>
-                <th className="pb-3 px-3">Floor</th>
-                <th className="pb-3 px-3">Consumption</th>
-                <th className="pb-3 px-3">Est. Cost</th>
-                <th className="pb-3 px-3">Current Load</th>
-                <th className="pb-3 px-3">Trend</th>
-                <th className="pb-3 px-3">Status</th>
-                <th className="pb-3 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {filteredRooms.map((room) => (
-                <tr key={room.id} className="hover:bg-slate-800/40 transition-colors group">
-                  <td className="py-3.5 px-3 font-bold text-slate-100">{room.name}</td>
-                  <td className="py-3.5 px-3 text-slate-400">{room.floor}</td>
-                  <td className="py-3.5 px-3 font-mono font-semibold text-slate-200">{room.consumption_kwh} kWh</td>
-                  <td className="py-3.5 px-3 font-bold text-emerald-400">₹{room.cost}</td>
-                  <td className="py-3.5 px-3 font-mono text-cyan-400">{room.current_load_kw || (room.consumption_kwh * 0.04).toFixed(1)} kW</td>
-                  <td className="py-3.5 px-3">
-                    <span className={`font-semibold ${room.trend_percent > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                      {room.trend_percent > 0 ? `↑ ${room.trend_percent}%` : `↓ ${Math.abs(room.trend_percent)}%`}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-3">
-                    <StatusBadge status={room.status} size="sm" />
-                  </td>
-                  <td className="py-3.5 px-3 text-right">
-                    <button
-                      onClick={() => onSelectRoom(room.id)}
-                      className="text-xs text-emerald-400 hover:underline font-semibold"
-                    >
-                      Inspect →
-                    </button>
-                  </td>
+        /* Table View */
+        <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="py-3.5 px-4">Room & Unit</th>
+                  <th className="py-3.5 px-4">Floor</th>
+                  <th className="py-3.5 px-4">Consumption</th>
+                  <th className="py-3.5 px-4">Accrued Cost</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {filteredRooms.map((room) => (
+                  <tr
+                    key={room.id}
+                    onClick={() => onSelectRoom(room.id)}
+                    className="hover:bg-slate-900/60 cursor-pointer transition-colors"
+                  >
+                    <td className="py-3 px-4 font-semibold text-slate-100">{room.name}</td>
+                    <td className="py-3 px-4 text-slate-400">{room.floor}</td>
+                    <td className="py-3 px-4 font-mono font-bold text-slate-200">{room.consumption_kwh} kWh</td>
+                    <td className="py-3 px-4 font-mono font-bold text-emerald-400">₹{room.cost}</td>
+                    <td className="py-3 px-4">
+                      <StatusBadge status={room.status} size="sm" />
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button className="text-amber-400 hover:text-amber-300 font-semibold">Inspect</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
 };
-

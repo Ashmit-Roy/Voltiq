@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, Activity } from 'lucide-react';
 import { AnomalyCard } from '../components/ui/AnomalyCard';
 import { AlertItem } from '../types';
 
@@ -12,7 +12,6 @@ interface AlertsPageProps {
 export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, onResolveAlert }) => {
   const [filter, setFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'RESOLVED'>('ALL');
 
-  // Deduplicate locally — guard against backend sending duplicate records
   const uniqueAlerts = React.useMemo(() => {
     const seen = new Set<string>();
     return alerts.filter((a) => {
@@ -34,13 +33,24 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Filter Tabs */}
-      <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800">
-        <div className="flex items-center space-x-2">
-          <ShieldAlert className="w-5 h-5 text-rose-400" />
+      {/* Engine Banner & Filter Bar */}
+      <div className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-rose-500">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/30">
+            <Activity className="w-5 h-5" />
+          </div>
           <div>
-            <h3 className="font-semibold text-slate-100 text-sm">Abnormal Energy Usage Alerts</h3>
-            <p className="text-[11px] text-slate-400">Section 16 — Filter events by severity or resolution status</p>
+            <div className="flex items-center space-x-2">
+              <h3 className="font-bold text-slate-100 text-sm font-heading">
+                Tradable Asset 02: Anomaly Detection Engine — Live Triage
+              </h3>
+              <span className="text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded">
+                Statistical Z-Score + IQR
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Review live power spikes, evaluate confidence deviations, and mark resolved anomalies.
+            </p>
           </div>
         </div>
 
@@ -59,7 +69,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap ${
                   filter === tab
                     ? tab === 'HIGH'
-                      ? 'bg-rose-500 text-white shadow-sm'
+                      ? 'bg-rose-600 text-white shadow-sm'
                       : tab === 'MEDIUM'
                       ? 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -73,12 +83,12 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
         </div>
       </div>
 
-      {/* Alert List */}
+      {/* Alert Feed */}
       {filteredAlerts.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center text-slate-400 space-y-3 border border-slate-800">
-          <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto" />
-          <h4 className="font-semibold text-slate-200 text-base">No Alerts Found</h4>
-          <p className="text-xs">There are no {filter.toLowerCase()} anomaly alerts matching your current filter.</p>
+          <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
+          <h4 className="font-bold text-slate-200 text-base font-heading">No Events Matching Filter</h4>
+          <p className="text-xs">There are no {filter.toLowerCase()} anomaly alerts in this view.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -102,4 +112,3 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ alerts, onSelectRoom, on
     </div>
   );
 };
-

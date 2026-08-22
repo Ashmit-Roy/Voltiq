@@ -8,14 +8,14 @@ import { DevicesPage } from './pages/DevicesPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { RankingsPage } from './pages/RankingsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { TradableAssetsModal } from './components/ui/TradableAssetsModal';
 import { apiService } from './services/api';
 import { DashboardSummary, DashboardTrendsResponse, RoomItem, DeviceItem, AlertItem, RecommendationItem } from './types';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 const deduplicateAlerts = (list: AlertItem[]): AlertItem[] => {
   const seen = new Set<string>();
   return list.filter((item) => {
-    // Compound key: prefer id, but also guard on title+room+value to catch API duplicates with same id
     const id = (item as any).alert_id || item.id;
     const key = id
       ? `${id}::${item.room_id}::${item.title}`
@@ -29,7 +29,6 @@ const deduplicateAlerts = (list: AlertItem[]): AlertItem[] => {
 const deduplicateRecommendations = (list: RecommendationItem[]): RecommendationItem[] => {
   const seen = new Set<string>();
   return list.filter((item) => {
-    // Compound key: id + title + room to catch all duplicate patterns from backend
     const key = `${item.id || ''}::${item.title}::${item.room_id || item.room_name || ''}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -41,6 +40,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [isTradableHubOpen, setIsTradableHubOpen] = useState(false);
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [trends, setTrends] = useState<DashboardTrendsResponse | null>(null);
@@ -53,7 +53,17 @@ export const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleToggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      if (next === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light-mode');
+      } else {
+        document.documentElement.classList.remove('light-mode');
+        document.documentElement.classList.add('dark');
+      }
+      return next;
+    });
   };
 
   const refreshAllData = async (tf: 'daily' | 'weekly' | 'monthly' = 'daily') => {
@@ -79,7 +89,6 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Automatically reset telemetry to clean baseline on initial startup / reload
     const initApp = async () => {
       try {
         await apiService.resetSimulation();
@@ -150,13 +159,14 @@ export const App: React.FC = () => {
   const activeAlertCount = alerts.filter((a) => a.status === 'ACTIVE').length;
 
   return (
-    <div className={`flex min-h-screen ${theme === 'light' ? 'light-mode bg-slate-100 text-slate-900' : 'dark bg-slate-950 text-slate-100'} transition-colors`}>
+    <div className={`flex min-h-screen ${theme === 'light' ? 'light-mode bg-zinc-100 text-zinc-900' : 'dark bg-neutral-950 text-zinc-100'} transition-colors duration-200`}>
       {/* Persistent Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         activeAlertCount={activeAlertCount}
         dataSourceStatus={summary?.data_source_status}
+        onOpenTradableHub={() => setIsTradableHubOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -173,12 +183,13 @@ export const App: React.FC = () => {
           devices={devices}
           alerts={alerts}
           onSelectRoom={handleSelectRoom}
+          onOpenTradableHub={() => setIsTradableHubOpen(true)}
         />
 
         <main className="p-4 sm:p-6 max-w-7xl w-full mx-auto flex-1">
           {/* Toast Notification Banner */}
           {toastMessage && (
-            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-emerald-950/90 to-slate-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-xl animate-fade-in">
+            <div className="mb-6 p-3.5 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-lg">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                 <span>{toastMessage}</span>
@@ -187,7 +198,7 @@ export const App: React.FC = () => {
                 onClick={() => setToastMessage(null)}
                 className="text-slate-400 hover:text-white text-xs font-bold px-2 py-0.5"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -212,6 +223,7 @@ export const App: React.FC = () => {
               onResetTelemetry={handleResetTelemetry}
               onResolveAlert={handleResolveAlert}
               isSimulating={isSimulating}
+              onOpenTradableHub={() => setIsTradableHubOpen(true)}
             />
           ) : activeTab === 'rooms' ? (
             <RoomsPage rooms={rooms} onSelectRoom={handleSelectRoom} />
@@ -226,9 +238,16 @@ export const App: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Tradable Modules Inspector Modal */}
+      <TradableAssetsModal
+        isOpen={isTradableHubOpen}
+        onClose={() => setIsTradableHubOpen(false)}
+        onNavigateToTab={handleTabChange}
+        onTriggerSpike={handleTriggerSpikeScenario}
+      />
     </div>
   );
 };
 
 export default App;
-

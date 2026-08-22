@@ -4,8 +4,9 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 min-h-screen overflow-x-hidden transition-colors duration-300;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #09090b !important;
+    color: #f4f4f5 !important;
+    @apply font-sans antialiased selection:bg-amber-500 selection:text-neutral-950 min-h-screen overflow-x-hidden transition-colors duration-200;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -13,191 +14,170 @@
   }
 }
 
-/* Custom Scrollbar */
+/* Minimalist Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #27272a;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #3f3f46;
 }
 
-/* Glassmorphism & Custom Card Classes */
+/* Pure Neutral Carbon Panels & Cards */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(18, 18, 21, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background-color 0.3s, border-color 0.3s;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(24, 24, 27, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(16, 185, 129, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(30, 30, 34, 0.85);
+  transform: translateY(-1px);
 }
 
-.glow-border-emerald {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+/* Engine Section Accent Highlights */
+.engine-border-ingest {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.engine-border-anomaly {
+  border-color: rgba(244, 63, 94, 0.4);
+}
+.engine-border-forecast {
+  border-color: rgba(13, 148, 136, 0.4);
+}
+.engine-border-eco {
   border-color: rgba(16, 185, 129, 0.4);
 }
 
-.glow-border-rose {
-  box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
-  border-color: rgba(244, 63, 94, 0.4);
-}
-
-.glow-border-cyan {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.4);
-}
-
-.glow-border-purple {
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
-  border-color: rgba(168, 85, 247, 0.4);
-}
-
-/* Shimmer Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(30, 41, 59, 0.4) 0%, rgba(51, 65, 85, 0.6) 50%, rgba(30, 41, 59, 0.4) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s infinite;
-}
-
-/* Light Theme Overrides */
+/* =========================================================================
+   Light Theme Styling (Crisp, High-Contrast Porcelain / Slate Theme)
+   ========================================================================= */
 .light-mode {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  background-color: #fafafa !important;
+  color: #18181b !important;
 }
 
-/* Cards & Panels */
+.light-mode body {
+  background-color: #fafafa !important;
+  color: #18181b !important;
+}
+
 .light-mode .glass-panel {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
 }
 
 .light-mode .glass-card {
   background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
 }
 
 .light-mode .glass-card:hover {
-  border-color: #10b981 !important;
-  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15) !important;
+  border-color: #d4d4d8 !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Text Colors */
+/* Text Overrides for Light Mode */
 .light-mode .text-slate-50,
 .light-mode .text-slate-100,
 .light-mode .text-slate-200 {
-  color: #0f172a !important;
+  color: #18181b !important;
 }
 
 .light-mode .text-slate-300,
 .light-mode .text-slate-400 {
-  color: #475569 !important;
+  color: #52525b !important;
 }
 
-.light-mode .text-slate-500,
-.light-mode .text-slate-600 {
-  color: #64748b !important;
+.light-mode .text-slate-500 {
+  color: #71717a !important;
 }
 
-/* Background overrides */
+/* Background Overrides for Light Mode */
 .light-mode .bg-slate-950,
 .light-mode .bg-slate-900,
-.light-mode .bg-slate-800 {
-  background-color: #f8fafc !important;
+.light-mode .bg-slate-850 {
+  background-color: #f4f4f5 !important;
 }
 
-.light-mode .bg-slate-950\/70,
 .light-mode .bg-slate-950\/80,
-.light-mode .bg-slate-900\/50,
-.light-mode .bg-slate-900\/80 {
-  background-color: #f1f5f9 !important;
+.light-mode .bg-slate-950\/90,
+.light-mode .bg-slate-900\/80,
+.light-mode .bg-slate-900\/90 {
+  background-color: #ffffff !important;
 }
 
-/* Borders */
+.light-mode .bg-slate-800 {
+  background-color: #e4e4e7 !important;
+}
+
+.light-mode .bg-slate-800\/60,
+.light-mode .bg-slate-800\/80 {
+  background-color: #f4f4f5 !important;
+}
+
+/* Border Overrides for Light Mode */
 .light-mode .border-slate-800,
 .light-mode .border-slate-800\/80,
 .light-mode .border-slate-800\/60,
-.light-mode .border-slate-800\/40,
 .light-mode .border-slate-700 {
-  border-color: #e2e8f0 !important;
+  border-color: #e4e4e7 !important;
 }
 
-/* Header & Sidebar */
+/* Header & Sidebar Light Mode */
 .light-mode header {
   background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #e2e8f0 !important;
+  border-color: #e4e4e7 !important;
 }
 
 .light-mode aside {
   background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+  border-color: #e4e4e7 !important;
 }
 
-/* Sidebar nav items */
 .light-mode aside button,
 .light-mode aside span {
-  color: #334155;
+  color: #27272a;
 }
 
-/* Filter tabs / button groups */
-.light-mode .bg-slate-950.p-1,
-.light-mode [class*="bg-slate-950"][class*="p-1"] {
-  background-color: #e2e8f0 !important;
-}
-
-/* Input fields */
+/* Inputs & Form Elements */
 .light-mode input,
 .light-mode select {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #d4d4d8 !important;
+  color: #18181b !important;
 }
 
 .light-mode input::placeholder {
-  color: #94a3b8 !important;
-}
-
-/* Scrollbar */
-.light-mode ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  color: #a1a1aa !important;
 }
 
 .light-mode ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-}
-
-.light-mode ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #d4d4d8;
 }
